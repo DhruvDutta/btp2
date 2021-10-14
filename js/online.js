@@ -22,13 +22,16 @@ const push = firebase.push
 const child = firebase.child
 const alert_html =`<div class="alert alert-info alert-dismissible fade show" id="copyalert" role="alert">Room Code Copied To Clipboard!<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`
 const error_html =`<div class="alert alert-warning alert-dismissible fade show" id="copyalert" role="alert">Room Unavailable<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`
+
 let curr_ref;
 let user_mark;
 let oppo_mark;
+let oppo_name;
 let deck={"X":[],"O":[],};
 document.getElementById('createbtn').addEventListener('click',create_room);
 document.getElementById('joinbtn').addEventListener('click',join_room);
 function create_room(){
+    let username = document.getElementById('username').value
     const roomListRef = ref(db, 'room/');
     const newRoomRef = push(roomListRef);
     curr_ref = newRoomRef.key
@@ -37,7 +40,8 @@ function create_room(){
     Initiate_game()
     set(newRoomRef, {
         allow:true,
-        turn:'X'
+        turn:'X',
+        x_user:username,
     });
     navigator.clipboard.writeText(curr_ref);
     document.getElementById('alert').innerHTML=alert_html;
@@ -45,6 +49,7 @@ function create_room(){
 }
 function join_room(){
     let roomcode = document.getElementById('room_code').value
+    let username = document.getElementById('username').value
     if(roomcode==''){
         document.getElementById('alert').innerHTML=error_html;
         return
@@ -58,7 +63,8 @@ function join_room(){
                 oppo_mark = "X"
                 Initiate_game()
                 firebase.update(ref(db,`room/${roomcode}/`),{
-                    allow:false
+                    allow:false,
+                    o_user:username,
                 })
                 document.getElementById('roombox').classList.add("d-none")
             }else{
@@ -87,12 +93,19 @@ function Initiate_game(){
                 win_check_fr()
             }
         }
+        if(data.key == 'o_user' && user_mark!='O'){
+            oppo_name = data.val()
+            document.getElementById('alert').innerHTML = `<div class="alert alert-success alert-dismissible fade show" id="copyalert" role="alert">${data.val()} Joined!<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`
+        }
     });
     window.onbeforeunload = (e)=>{
         firebase.update(ref(db,`room/`),{
             [curr_ref]:null,
         })
     }
+    firebase.onChildRemoved(commentsRef,(data)=>{
+        document.getElementById('alert').innerHTML = `<div class="alert alert-danger alert-dismissible fade show" id="copyalert" role="alert">${oppo_name} Left!<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`
+    })
 }
 function post(index){
     console.log("Index Clicked",index)

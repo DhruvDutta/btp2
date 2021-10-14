@@ -44,7 +44,7 @@
     z-index: 5;
     backdrop-filter: blur(2px);
 }
-#room_code{
+.input{
     outline: none;
     border: none;
 }
