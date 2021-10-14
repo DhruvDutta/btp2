@@ -36,13 +36,17 @@
 }
 .room{
     position: absolute;
-    height: 100vh;
-    width: 100vw;
+    height: 100%;
+    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 5;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.4);
+}
+#room_code{
+    outline: none;
+    border: none;
 }
 #winbox{
     position: absolute;
