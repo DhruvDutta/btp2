@@ -25,12 +25,13 @@ const error_html =`<div class="alert alert-warning alert-dismissible fade show" 
 let curr_ref;
 let user_mark;
 let oppo_mark;
+let deck={"X":[],"O":[],};
 document.getElementById('createbtn').addEventListener('click',create_room);
 document.getElementById('joinbtn').addEventListener('click',join_room);
 function create_room(){
     const roomListRef = ref(db, 'room/');
     const newRoomRef = push(roomListRef);
-    curr_ref = newRoomRef
+    curr_ref = newRoomRef.key
     user_mark = "X"
     oppo_mark = "O"
     Initiate_game()
@@ -38,7 +39,7 @@ function create_room(){
         allow:true,
         turn:'X'
     });
-    navigator.clipboard.writeText(curr_ref.key);
+    navigator.clipboard.writeText(curr_ref);
     document.getElementById('alert').innerHTML=alert_html;
     document.getElementById('roombox').classList.add("d-none")
 }
@@ -51,13 +52,14 @@ function join_room(){
     get(child(ref(db),`room/`)).then((snapshot) => {
         if (snapshot.hasChild(roomcode)) {
             if(snapshot.child(roomcode).val().allow){
-                firebase.update(ref(db,`room/${roomcode}/`),{
-                    allow:false
-                })
+                
                 curr_ref = roomcode
                 user_mark = "O"
                 oppo_mark = "X"
                 Initiate_game()
+                firebase.update(ref(db,`room/${roomcode}/`),{
+                    allow:false
+                })
                 document.getElementById('roombox').classList.add("d-none")
             }else{
                 document.getElementById('alert').innerHTML=error_html;
@@ -76,27 +78,29 @@ function Initiate_game(){
         let index = cells.item(i).id
         cells.item(i).addEventListener('click',()=>{post(index)})
     }
-    const commentsRef = ref(db, 'room/' + curr_ref.key);
+    const commentsRef = ref(db, 'room/' + curr_ref);
     firebase.onChildAdded(commentsRef, (data) => {
         console.log("ChildAdded",data.key,data.val())
         if(isNumeric(data.key)){
-            if(parseInt(data.key)>0 && parseInt(data.key<=9)){
-                document.getElementById(`${index}`).innerText = data.val(); 
+            if(parseInt(data.key)>0 && parseInt(data.key)<=9){
+                document.getElementById(data.key).innerText = data.val();
+                deck[data.val()].push(parseInt(data.key))
+                win_check_fr()
             }
         }
     });
     window.onbeforeunload = (e)=>{
         firebase.update(ref(db,`room/`),{
-            [curr_ref.key]:null,
+            [curr_ref]:null,
         })
     }
 }
 function post(index){
     console.log("Index Clicked",index)
-    get(child(ref(db),`room/${curr_ref.key}/`)).then((snapshot)=>{
+    get(child(ref(db),`room/${curr_ref}/`)).then((snapshot)=>{
         if(snapshot.val().turn == user_mark && !snapshot.hasChild(index)){
             document.getElementById(`${index}`).innerText = user_mark;
-            firebase.update(ref(db,`room/${curr_ref.key}/`),{
+            firebase.update(ref(db,`room/${curr_ref}/`),{
                 turn:oppo_mark,
                 [index]:user_mark,
             })
@@ -104,9 +108,24 @@ function post(index){
             alert('Opponent\'n Turn')
         }
     })
-    win_check()
     
 }
 function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
+}
+function win_check_fr(){
+    let win_condition=[[1,2,3],[4,5,6],[7,8,9],[1,5,9],[3,5,7],[1,4,7],[2,5,8],[3,6,9]]
+    console.log("X:",deck["X"])
+    console.log("O:",deck["O"])
+    for(let i=0;i<win_condition.length;i++){
+        if(win_condition[i].every(val=> deck["X"].includes(val))){
+            document.getElementById('winbox').classList.remove('d-none');
+            document.getElementById('wintext').innerText = 'X Wins!'
+            return
+        }else if(win_condition[i].every(val=> deck["O"].includes(val))){
+            document.getElementById('winbox').classList.remove('d-none');
+            document.getElementById('wintext').innerText = 'O Wins!'
+            return
+        }
+    }
 }
