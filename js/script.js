@@ -5,15 +5,22 @@ let game_mode = (mode)=>{
         if(mode =='ol'){
             document.getElementById('online').classList.add("text-dark","bg-light")
             document.getElementById('computer').classList.remove("text-dark","bg-light")
+            document.getElementById('roombox').classList.remove("d-none")
+            var cells = document.getElementsByClassName("cell");
+            for (var i = 0; i < cells.length; i++) {
+                cells.item(i).innerText =''
+            }
             console.log('Mode:online')
             curr_mode = 'ol'
         }else if(mode=='co') {
             document.getElementById('computer').classList.add("text-dark","bg-light")
             document.getElementById('online').classList.remove("text-dark","bg-light")
+            document.getElementById('roombox').classList.add("d-none")
             console.log('Mode:Computer')
             var cells = document.getElementsByClassName("cell");
             for (var i = 0; i < cells.length; i++) {
                 cells.item(i).setAttribute('onclick','type(this.id);')
+                cells.item(i).innerText =''
             }
             curr_mode = 'co'
         }
