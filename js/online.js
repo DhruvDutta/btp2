@@ -80,7 +80,6 @@ function Initiate_game(){
     }
     const commentsRef = ref(db, 'room/' + curr_ref);
     firebase.onChildAdded(commentsRef, (data) => {
-        console.log("ChildAdded",data.key,data.val())
         if(isNumeric(data.key)){
             if(parseInt(data.key)>0 && parseInt(data.key)<=9){
                 document.getElementById(data.key).innerText = data.val();
@@ -129,3 +128,22 @@ function win_check_fr(){
         }
     }
 }
+
+function reset(){
+    var cells = document.getElementsByClassName("cell");
+    for (var i = 0; i < cells.length; i++) {
+        let index = cells.item(i).id
+        cells.item(i).innerText =''
+    }
+    firebase.update(ref(db,`room/`),{
+        [curr_ref]:null,
+    })
+    set(ref(db,`room/${curr_ref}/`),{
+        allow:false,
+        turn:'O',
+    })
+    deck={"X":[],"O":[],};
+    document.getElementById('winbox').classList.add('d-none');
+    document.getElementById('wintext').innerText = ''
+}
+document.getElementById('reset').addEventListener('click',reset);
