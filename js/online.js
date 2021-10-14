@@ -101,13 +101,24 @@ function Initiate_game(){
             oppo_name = data.val()
         }
     });
+    
     window.onbeforeunload = (e)=>{
-        firebase.update(ref(db,`room/`),{
-            [curr_ref]:null,
+        get(child(ref(db),`room/${curr_ref}/`)).then((snapshot)=>{
+            if(!snapshot.val().allow){
+                firebase.update(ref(db,`room/${curr_ref}`),{
+                    allow:true,
+                })
+            }else{
+                firebase.update(ref(db,`room/`),{
+                    [curr_ref]:null,
+                })
+            }
         })
     }
-    firebase.onChildRemoved(commentsRef,(data)=>{
-        document.getElementById('alert').innerHTML = `<div class="alert alert-danger alert-dismissible fade show" id="copyalert" role="alert">${oppo_name} Left!<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`
+    firebase.onChildChanged(commentsRef,(data)=>{
+        if(data.key =='allow' && data.val()==true){
+            document.getElementById('alert').innerHTML = `<div class="alert alert-danger alert-dismissible fade show" id="copyalert" role="alert">${oppo_name} Left!<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`    
+        }
     })
 }
 function post(index){
