@@ -97,6 +97,9 @@ function Initiate_game(){
             oppo_name = data.val()
             document.getElementById('alert').innerHTML = `<div class="alert alert-success alert-dismissible fade show" id="copyalert" role="alert">${data.val()} Joined!<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`
         }
+        if(data.key == 'x_user' && user_mark!='X'){
+            oppo_name = data.val()
+        }
     });
     window.onbeforeunload = (e)=>{
         firebase.update(ref(db,`room/`),{
