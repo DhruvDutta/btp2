@@ -58,6 +58,7 @@ function join_room(){
                 user_mark = "O"
                 oppo_mark = "X"
                 Initiate_game()
+                document.getElementById('roombox').classList.add("d-none")
             }else{
                 document.getElementById('alert').innerHTML=error_html;
                 return    
@@ -69,19 +70,35 @@ function join_room(){
     })
 }
 function Initiate_game(){
+    console.log('init...')
     var cells = document.getElementsByClassName("cell");
     for (var i = 0; i < cells.length; i++) {
         let index = cells.item(i).id
         cells.item(i).addEventListener('click',()=>{post(index)})
     }
+    const commentsRef = ref(db, 'room/' + curr_ref.key);
+    firebase.onChildAdded(commentsRef, (data) => {
+        console.log("ChildAdded",data.key,data.val())
+        if(isNumeric(data.key)){
+            if(parseInt(data.key)>0 && parseInt(data.key<=9)){
+                document.getElementById(`${index}`).innerText = data.val(); 
+            }
+        }
+    });
+    window.onbeforeunload = (e)=>{
+        firebase.update(ref(db,`room/`),{
+            [curr_ref.key]:null,
+        })
+    }
 }
 function post(index){
-    console.log(index)
+    console.log("Index Clicked",index)
     get(child(ref(db),`room/${curr_ref.key}/`)).then((snapshot)=>{
-        if(snapshot.val().turn == user_mark){
+        if(snapshot.val().turn == user_mark && !snapshot.hasChild(index)){
             document.getElementById(`${index}`).innerText = user_mark;
             firebase.update(ref(db,`room/${curr_ref.key}/`),{
                 turn:oppo_mark,
+                [index]:user_mark,
             })
         }else{
             alert('Opponent\'n Turn')
@@ -89,4 +106,7 @@ function post(index){
     })
     win_check()
     
+}
+function isNumeric(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
 }
